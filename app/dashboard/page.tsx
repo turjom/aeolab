@@ -2,6 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface TrackingResult {
   id: string
@@ -25,24 +37,18 @@ interface Business {
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
-
-  if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-  
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
     hour: 'numeric',
-    minute: '2-digit'
+    minute: '2-digit',
   })
+}
+
+function truncateText(text: string, maxLength: number = 100): string {
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
 }
 
 function getRecommendations(visibilityScore: number, industry: string, location: string): string[] {
@@ -100,9 +106,23 @@ export default function DashboardPage() {
   const [appearedCount, setAppearedCount] = useState(0)
   const [totalChecks, setTotalChecks] = useState(0)
   const [failedChecks, setFailedChecks] = useState(0)
-  const [fullResponseModal, setFullResponseModal] = useState<{ text: string; prompt: string; platform: string } | null>(null)
+  const [trackingLoading, setTrackingLoading] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [remainingRuns, setRemainingRuns] = useState<number | null>(null)
 
   const supabase = createClient()
+
+  const fetchLimitStatus = async () => {
+    try {
+      const response = await fetch('/api/tracking/check-limit')
+      const data = await response.json()
+      if (response.ok && typeof data.remainingRuns === 'number') {
+        setRemainingRuns(data.remainingRuns)
+      }
+    } catch (err) {
+      console.error('Error fetching rate limit:', err)
+    }
+  }
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -131,7 +151,7 @@ export default function DashboardPage() {
 
         setBusiness(businessData)
 
-        // Fetch tracked prompts
+        // Get active prompts for this business
         const { data: prompts, error: promptsError } = await supabase
           .from('tracked_prompts')
           .select('id, prompt_text')
@@ -146,7 +166,7 @@ export default function DashboardPage() {
         const promptIds = prompts.map(p => p.id)
         const promptMap = new Map(prompts.map(p => [p.id, p.prompt_text]))
 
-        // Fetch tracking results
+        // Fetch tracking results for these prompts
         const { data: trackingResults, error: resultsError } = await supabase
           .from('tracking_results')
           .select('*')
@@ -154,23 +174,31 @@ export default function DashboardPage() {
           .order('tracked_at', { ascending: false })
           .limit(20)
 
-        if (resultsError || !trackingResults) {
+        if (resultsError) {
+          console.error('Error fetching tracking results:', resultsError)
           setLoading(false)
           return
         }
 
-        // Add prompt text to results
-        const resultsWithPrompts = trackingResults.map(result => ({
+        console.log('DEBUG - Tracking results:', trackingResults?.map(r => ({
+          appeared: r.appeared,
+          status: r.status,
+          position: r.position,
+          platform: r.ai_platform
+        })))
+
+        // Transform results to include prompt_text
+        const resultsWithPrompts = (trackingResults || []).map((result: any) => ({
           ...result,
           prompt_text: promptMap.get(result.prompt_id) || 'Unknown prompt',
         }))
 
         setResults(resultsWithPrompts)
 
-        // Calculate visibility score
-        const successfulChecks = trackingResults.filter(r => r.status === 'success')
-        const appeared = successfulChecks.filter(r => r.appeared === true)
-        const failed = trackingResults.filter(r => r.status === 'failed')
+        // Calculate visibility score (exclude failed checks)
+        const successfulChecks = (trackingResults || []).filter((r: any) => r.status === 'success')
+        const appeared = successfulChecks.filter((r: any) => r.appeared === true)
+        const failed = (trackingResults || []).filter((r: any) => r.status === 'failed')
 
         const score = successfulChecks.length > 0
           ? Math.round((appeared.length / successfulChecks.length) * 100)
@@ -191,6 +219,12 @@ export default function DashboardPage() {
     loadDashboardData()
   }, [supabase])
 
+  useEffect(() => {
+    if (business) {
+      fetchLimitStatus()
+    }
+  }, [business])
+
   const getScoreColor = (score: number) => {
     if (score < 20) return 'text-red-600'
     if (score < 50) return 'text-yellow-600'
@@ -205,8 +239,68 @@ export default function DashboardPage() {
 
   const copyPrompt = (promptText: string) => {
     navigator.clipboard.writeText(promptText)
-    // You could add a toast notification here
+    setToast({ message: 'Prompt copied to clipboard', type: 'success' })
+    setTimeout(() => setToast(null), 3000)
   }
+
+  const handleRunTracking = async () => {
+    if (!business) return
+
+    setTrackingLoading(true)
+    try {
+      const response = await fetch('/api/tracking/run-manual', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ businessId: business.id }),
+      })
+
+      const data = await response.json()
+
+      if (response.status === 429) {
+        setToast({
+          message: data.error || 'Rate limit exceeded. Try again later.',
+          type: 'error',
+        })
+        fetchLimitStatus()
+      } else if (data.success) {
+        setToast({
+          message: data.message || 'Tracking completed successfully',
+          type: 'success',
+        })
+        if (typeof data.remainingRuns === 'number') {
+          setRemainingRuns(data.remainingRuns)
+        }
+        // Reload dashboard data
+        window.location.reload()
+      } else {
+        setToast({
+          message: data.error || 'Tracking failed',
+          type: 'error',
+        })
+        fetchLimitStatus()
+      }
+    } catch (error) {
+      console.error('Error running tracking:', error)
+      setToast({
+        message: 'Failed to run tracking. Please try again.',
+        type: 'error',
+      })
+      fetchLimitStatus()
+    } finally {
+      setTrackingLoading(false)
+      setTimeout(() => setToast(null), 3000)
+    }
+  }
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [toast])
 
   if (loading) {
     return (
@@ -251,30 +345,74 @@ export default function DashboardPage() {
   const recommendations = getRecommendations(visibilityScore, business.industry, business.location)
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-8 space-y-8">
-      {/* Top Section - Visibility Score */}
-      <div className={`rounded-lg border-2 p-8 ${getScoreBgColor(visibilityScore)}`}>
+    <div className="max-w-6xl mx-auto p-6 md:p-8 space-y-6">
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <Card className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-sm hover:shadow-md transition-shadow rounded-xl">
+          <CardContent className="pt-6">
+            <div className="text-sm text-gray-600 mb-1">Total Searches Tracked</div>
+            <div className="text-2xl font-bold">{results.length}</div>
+            <div className="text-xs text-gray-500 mt-1">Across ChatGPT & Perplexity</div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-red-50 to-white border-2 border-red-200 shadow-md rounded-xl hover:shadow-lg transition-shadow">
+          <CardContent className="pt-6">
+            <div className="text-sm font-medium text-red-900 mb-1">Visibility Rate</div>
+            <div className="text-3xl font-bold text-red-900">{visibilityScore}%</div>
+            <div className="text-xs text-gray-500 mt-1">
+              {visibilityScore < 20 ? '🔴 Needs improvement' : visibilityScore < 50 ? '🟡 Below average' : '🟢 Good visibility'}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-sm hover:shadow-md transition-shadow rounded-xl">
+          <CardContent className="pt-6">
+            <div className="text-sm text-gray-600 mb-1">This Week</div>
+            <div className="text-2xl font-bold">{appearedCount} / {totalChecks}</div>
+            <div className="text-xs text-gray-500 mt-1">Successful checks</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Run Tracking Now */}
+      <div className="flex justify-center mb-6">
         <div className="text-center">
-          <h2 className="text-sm font-medium text-gray-600 mb-2">Visibility Score</h2>
-          <div className={`text-6xl font-bold mb-4 ${getScoreColor(visibilityScore)}`}>
-            {visibilityScore}%
-          </div>
-          <p className="text-gray-700 text-lg">
-            You appeared in <span className="font-semibold">{appearedCount}</span> out of{' '}
-            <span className="font-semibold">{totalChecks}</span> searches this week
-          </p>
-          {failedChecks > 0 && (
-            <p className="text-sm text-gray-600 mt-2">
-              {failedChecks} check{failedChecks > 1 ? 's' : ''} failed this week
+          <Button
+            size="lg"
+            disabled={trackingLoading || !business || remainingRuns === 0}
+            onClick={handleRunTracking}
+            className="bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-800 text-white font-semibold px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed rounded-full"
+          >
+            {trackingLoading ? (
+              <>
+                <span className="animate-spin mr-2">⟳</span>
+                Running...
+              </>
+            ) : (
+              'Run Tracking Now'
+            )}
+          </Button>
+          {remainingRuns !== null && (
+            <p
+              className={`mt-2 text-sm ${
+                remainingRuns === 0
+                  ? 'text-amber-600'
+                  : 'text-gray-600'
+              }`}
+            >
+              {remainingRuns > 0
+                ? `${remainingRuns} manual run${remainingRuns !== 1 ? 's' : ''} remaining today`
+                : 'Manual tracking limit reached. Automated tracking continues.'}
             </p>
           )}
         </div>
       </div>
 
-      {/* Middle Section - Recent Tracking Results */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Searches</h2>
-        
+      {/* Recent Tracking Results */}
+      <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
+        <CardHeader className="border-b border-gray-100">
+          <CardTitle className="text-2xl font-bold">Recent Searches</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
         {results.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600 text-lg mb-2">No tracking data yet</p>
@@ -285,73 +423,93 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-4">
             {results.map((result) => (
-              <div
+              <Card
                 key={result.id}
-                className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
+                className="mb-4 last:mb-0 bg-gradient-to-br from-white to-gray-50 border border-gray-200 hover:border-red-200 hover:shadow-md transition-all duration-200 cursor-pointer rounded-lg"
               >
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="text-gray-900 font-medium mb-2">{result.prompt_text}</p>
-                    <div className="flex flex-wrap items-center gap-3 text-sm">
-                      <span
-                        className={`px-2 py-1 rounded ${
-                          result.ai_platform === 'chatgpt'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-purple-100 text-purple-800'
-                        }`}
-                      >
-                        {result.ai_platform === 'chatgpt' ? 'ChatGPT' : 'Perplexity'}
-                      </span>
-                      {result.status === 'success' ? (
-                        result.appeared ? (
-                          <span className="text-green-700 font-medium">
-                            ✅ Appeared
-                            {result.position && ` (${result.position}${result.position === 1 ? 'st' : result.position === 2 ? 'nd' : result.position === 3 ? 'rd' : 'th'} position)`}
-                          </span>
-                        ) : (
-                          <span className="text-gray-600">❌ Not mentioned</span>
-                        )
-                      ) : (
-                        <span className="text-yellow-700 font-medium">
-                          ⚠️ Check failed
-                          {result.error_message && `: ${result.error_message}`}
-                        </span>
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 pr-4">
+                      <p className="text-gray-900 text-base font-semibold mb-3">
+                        {truncateText(result.prompt_text || 'Unknown prompt', 100)}
+                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge
+                          variant="secondary"
+                          className={result.ai_platform === 'chatgpt' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}
+                        >
+                          {result.ai_platform === 'chatgpt' ? 'ChatGPT' : 'Perplexity'}
+                        </Badge>
+                        {result.status === 'failed' ? (
+                          <Badge variant="outline" className="border-amber-500 text-amber-600 bg-amber-50">
+                            ⚠ Check failed
+                          </Badge>
+                        ) : result.appeared === true ? (
+                          <Badge className="bg-green-600 text-white hover:bg-green-600">
+                            ✓ Appeared{result.position ? ` - ${result.position} position` : ''}
+                          </Badge>
+                        ) : result.appeared === false ? (
+                          <Badge variant="destructive">
+                            ✗ Not mentioned
+                          </Badge>
+                        ) : null}
+                        <span className="text-sm text-gray-500">{formatDate(result.tracked_at)}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 shrink-0">
+                      {result.full_response_text && (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">View Full Response</Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>Full AI Response</DialogTitle>
+                              <DialogDescription>
+                                Platform: {result.ai_platform === 'chatgpt' ? 'ChatGPT' : 'Perplexity'} • Checked: {new Date(result.tracked_at).toLocaleString()}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="font-semibold mb-1">Prompt:</h4>
+                                <p className="text-sm text-gray-600">{result.prompt_text}</p>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold mb-1">Full Response:</h4>
+                                <p className="text-sm whitespace-pre-wrap">{result.full_response_text}</p>
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button variant="ghost" onClick={() => copyPrompt(result.prompt_text!)}>
+                                Copy Prompt
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       )}
-                      <span className="text-gray-500">{formatDate(result.tracked_at)}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyPrompt(result.prompt_text!)}
+                      >
+                        Copy Prompt
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex gap-2 sm:flex-col">
-                    {result.full_response_text && (
-                      <button
-                        onClick={() =>
-                          setFullResponseModal({
-                            text: result.full_response_text!,
-                            prompt: result.prompt_text!,
-                            platform: result.ai_platform === 'chatgpt' ? 'ChatGPT' : 'Perplexity',
-                          })
-                        }
-                        className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
-                      >
-                        View Full Response
-                      </button>
-                    )}
-                    <button
-                      onClick={() => copyPrompt(result.prompt_text!)}
-                      className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 text-gray-700 transition-colors"
-                    >
-                      Copy Prompt
-                    </button>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Bottom Section - Recommendations */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">How to Improve Your Visibility</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">How to Improve Your Visibility</CardTitle>
+        </CardHeader>
+        <CardContent>
         {recommendations.length > 0 ? (
           <ol className="space-y-3">
             {recommendations.map((rec, index) => (
@@ -366,54 +524,20 @@ export default function DashboardPage() {
         ) : (
           <p className="text-gray-600">Keep up the great work!</p>
         )}
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Full Response Modal */}
-      {fullResponseModal && (
+      {/* Toast Notification */}
+      {toast && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={() => setFullResponseModal(null)}
+          className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 ${
+            toast.type === 'success'
+              ? 'bg-green-50 border border-green-200 text-green-800'
+              : 'bg-red-50 border border-red-200 text-red-800'
+          }`}
         >
-          <div
-            className="bg-white rounded-lg max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Full AI Response</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Platform: {fullResponseModal.platform}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setFullResponseModal(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="text-sm text-gray-700">
-                <span className="font-medium">Prompt:</span> {fullResponseModal.prompt}
-              </p>
-            </div>
-            <div className="p-6 overflow-y-auto flex-1">
-              <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
-                {fullResponseModal.text}
-              </pre>
-            </div>
-            <div className="p-6 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(fullResponseModal.text)
-                  // You could add a toast notification here
-                }}
-                className="px-4 py-2 bg-red-900 text-white rounded hover:bg-red-800 transition-colors"
-              >
-                Copy Response
-              </button>
-            </div>
-          </div>
+          <span className="text-xl">{toast.type === 'success' ? '✓' : '✕'}</span>
+          <p className="font-medium">{toast.message}</p>
         </div>
       )}
     </div>

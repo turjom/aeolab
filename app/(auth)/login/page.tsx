@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -93,10 +94,11 @@ export default function LoginPage() {
               />
             </div>
 
-            <button
+            <Button
               type="submit"
+              variant="default"
+              className="w-full bg-red-900 hover:bg-red-800 text-white"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -125,18 +127,15 @@ export default function LoginPage() {
               ) : (
                 'Sign In'
               )}
-            </button>
+            </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <Link
-                href="/signup"
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
-                Sign up
-              </Link>
+              <Button variant="link" className="px-0 h-auto text-primary font-medium" asChild>
+                <Link href="/signup">Sign up</Link>
+              </Button>
             </p>
           </div>
         </div>

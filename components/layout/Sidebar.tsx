@@ -5,9 +5,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -21,6 +23,7 @@ export default function Sidebar() {
   ]
 
   const handleLogout = async () => {
+    setLoggingOut(true)
     try {
       // Clear sessionStorage to reset trial banner dismissal
       sessionStorage.clear()
@@ -35,6 +38,8 @@ export default function Sidebar() {
       console.error('Error during logout:', error)
       // Still redirect even if there's an error
       router.push('/login')
+    } finally {
+      setLoggingOut(false)
     }
   }
 
@@ -87,7 +92,7 @@ export default function Sidebar() {
       {/* Hamburger Button - Always visible */}
       <button
         onClick={toggleSidebar}
-        className="hamburger-button fixed top-4 left-4 z-[60] p-2 rounded-md bg-[#1f2937] text-white hover:bg-gray-700 transition-colors"
+        className="hamburger-button fixed top-4 left-4 z-[60] p-2 rounded-md bg-white border border-gray-200 text-gray-900 hover:bg-red-50 hover:text-red-900 transition-colors shadow-sm"
         aria-label="Toggle sidebar"
       >
         <span className="text-2xl">☰</span>
@@ -109,7 +114,7 @@ export default function Sidebar() {
           fixed
           top-0 left-0
           h-full w-64
-          bg-[#1f2937] text-white
+          bg-white border-r border-gray-200 text-gray-900
           z-50
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -117,15 +122,15 @@ export default function Sidebar() {
         `}
       >
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-md text-white hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-md text-gray-900 hover:bg-red-50 hover:text-red-900 transition-colors"
             aria-label="Toggle sidebar"
           >
             <span className="text-2xl">☰</span>
           </button>
-          <h2 className="text-xl font-bold whitespace-nowrap overflow-visible flex-1 text-center">AEOLab</h2>
+          <h2 className="text-2xl font-bold text-red-900 whitespace-nowrap overflow-visible flex-1 text-center">AEOLab</h2>
           <div className="w-10"></div>
         </div>
 
@@ -134,39 +139,39 @@ export default function Sidebar() {
           {menuItems.map((item) => {
             const active = isActive(item.href)
             return (
-              <Link
+              <Button
                 key={item.href}
-                href={item.href}
-                onClick={handleLinkClick}
-                className={`
-                  block px-4 py-3 rounded-lg
-                  transition-colors duration-200
-                  ${
-                    active
-                      ? 'bg-gray-700 text-white font-medium'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                  }
-                `}
+                variant="ghost"
+                className={`w-full justify-start ${
+                  active ? 'bg-red-100 text-red-900' : 'text-gray-900 hover:bg-red-50 hover:text-red-900'
+                }`}
+                asChild
               >
-                {item.label}
-              </Link>
+                <Link href={item.href} onClick={handleLinkClick}>
+                  {item.label}
+                </Link>
+              </Button>
             )
           })}
         </nav>
 
         {/* Logout Button */}
-        <div className="p-4 border-t border-gray-700">
-          <button
+        <div className="mt-auto pt-4 pb-4 px-4 border-t border-gray-200">
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-gray-900 hover:bg-red-50 hover:text-red-900"
             onClick={handleLogout}
-            className="
-              w-full px-4 py-3 rounded-lg
-              bg-red-600 hover:bg-red-700
-              text-white font-medium
-              transition-colors duration-200
-            "
+            disabled={loggingOut}
           >
-            Logout
-          </button>
+            {loggingOut ? (
+              <>
+                <span className="animate-spin mr-2">⟳</span>
+                Logging out...
+              </>
+            ) : (
+              'Logout'
+            )}
+          </Button>
         </div>
       </aside>
     </>

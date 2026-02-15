@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
 
 export default function TrialBanner() {
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null)
@@ -108,9 +109,9 @@ export default function TrialBanner() {
   console.log('[TrialBanner] Rendering banner')
 
   return (
-    <div className="bg-yellow-100 border-b border-yellow-400 px-4 py-3 relative">
+    <div className="sticky top-0 z-40 bg-amber-100 border-b border-amber-300 px-4 py-3 relative">
       <div className="max-w-7xl mx-auto flex items-center justify-center">
-        <p className="text-sm text-gray-900 font-medium">
+        <p className="text-sm text-amber-900 font-medium">
           {isExpired ? (
             'Trial ended - Upgrade to continue'
           ) : (
@@ -118,25 +119,15 @@ export default function TrialBanner() {
           )}
         </p>
       </div>
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={handleDismiss}
-        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 transition-colors"
+        className="absolute right-2 top-1/2 -translate-y-1/2 text-amber-900 hover:bg-amber-200"
         aria-label="Dismiss banner"
       >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
+        ×
+      </Button>
     </div>
   )
 }
