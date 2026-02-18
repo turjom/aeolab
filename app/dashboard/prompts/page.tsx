@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
 
 interface PromptWithStats {
   id: string
@@ -154,10 +152,10 @@ export default function TrackedPromptsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] bg-[#0a0a0a]">
         <div className="text-center">
           <svg
-            className="animate-spin h-8 w-8 text-red-900 mx-auto mb-4"
+            className="animate-spin h-8 w-8 text-red-400 mx-auto mb-4"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -176,28 +174,26 @@ export default function TrackedPromptsPage() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading prompts...</p>
+          <p className="text-white/60">Loading prompts...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-8">
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Tracked Prompts</CardTitle>
-          <p className="text-sm text-gray-600">Manage the search queries we track for your business</p>
-        </CardHeader>
-      </Card>
+    <div className="max-w-4xl mx-auto p-4 sm:p-8 bg-[#0a0a0a] min-h-screen">
+      <div className="border border-white/10 rounded-2xl p-6 mb-6" style={{ background: '#111111' }}>
+        <h1 className="text-white text-2xl font-bold mb-2">Tracked Prompts</h1>
+        <p className="text-white/60 text-sm">Manage the search queries we track for your business</p>
+      </div>
 
       {/* Toast Notification */}
       {toast && (
         <div
           className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 ${
             toast.type === 'success'
-              ? 'bg-green-50 border border-green-200 text-green-800'
-              : 'bg-red-50 border border-red-200 text-red-800'
+              ? 'bg-green-900/30 border border-green-400/20 text-green-400'
+              : 'bg-red-900/30 border border-red-400/20 text-red-400'
           }`}
         >
           <span className="text-xl">{toast.type === 'success' ? '✓' : '✕'}</span>
@@ -207,42 +203,47 @@ export default function TrackedPromptsPage() {
 
       {/* Prompts List */}
       {prompts.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-gray-600 text-center">No prompts found. Please complete business setup.</p>
-          </CardContent>
-        </Card>
+        <div className="border border-white/10 rounded-2xl p-6" style={{ background: '#111111' }}>
+          <p className="text-white/60 text-center">No prompts found. Please complete business setup.</p>
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div>
           {prompts.map((prompt) => (
-            <Card key={prompt.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="font-medium mb-2">{prompt.prompt_text}</p>
-                    <p className="text-sm text-gray-600">
-                      Appeared {prompt.appeared_count} out of {prompt.total_checks} checks
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Last checked: {formatDate(prompt.last_tracked_at)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {prompt.is_active ? (
-                      <Badge className="bg-green-600">Active</Badge>
-                    ) : (
-                      <Badge variant="secondary">Paused</Badge>
-                    )}
-                    <Switch
-                      id={`switch-${prompt.id}`}
-                      checked={prompt.is_active}
-                      onCheckedChange={() => handleToggleActive(prompt.id, prompt.is_active)}
-                      aria-label={prompt.is_active ? 'Active' : 'Paused'}
-                    />
-                  </div>
+            <div key={prompt.id} className="border border-white/10 rounded-xl p-4 mb-3" style={{ background: '#1a1a1a' }}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-white font-medium text-sm mb-2">{prompt.prompt_text}</p>
+                  <p className="text-white/40 text-xs">
+                    Appeared {prompt.appeared_count} out of {prompt.total_checks} checks
+                  </p>
+                  <p className="text-white/40 text-xs mt-1">
+                    Last checked: {formatDate(prompt.last_tracked_at)}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex items-center gap-2">
+                  {prompt.is_active ? (
+                    <span className="bg-green-900/30 text-green-400 border border-green-400/20 rounded-full px-2 py-0.5 text-xs">Active</span>
+                  ) : (
+                    <span className="bg-white/5 text-white/30 border border-white/10 rounded-full px-2 py-0.5 text-xs">Paused</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleActive(prompt.id, prompt.is_active)}
+                    aria-label={prompt.is_active ? 'Active' : 'Paused'}
+                    className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+                    style={{
+                      background: prompt.is_active ? '#166534' : 'rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(255,255,255,0.1)'
+                    }}
+                  >
+                    <span
+                      className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                      style={{ transform: prompt.is_active ? 'translateX(24px)' : 'translateX(4px)' }}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       )}

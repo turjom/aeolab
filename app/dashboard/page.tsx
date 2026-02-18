@@ -33,6 +33,7 @@ interface Business {
   business_name: string
   industry: string
   location: string
+  country?: string
 }
 
 function formatDate(dateString: string): string {
@@ -51,30 +52,54 @@ function truncateText(text: string, maxLength: number = 100): string {
   return text.substring(0, maxLength) + '...'
 }
 
-function getRecommendations(visibilityScore: number, industry: string, location: string): string[] {
+function getRecommendations(visibilityScore: number, industry: string, location: string, country: string): string[] {
   const recommendations: string[] = []
+  const isUS = country === 'United States'
+  const isSG = country === 'Singapore'
   
   if (visibilityScore < 20) {
     // Tier 1: Poor Visibility
-    recommendations.push(`Add more online reviews mentioning your service and location`)
-    recommendations.push(`Create a blog post about ${industry.toLowerCase()} in ${location}`)
-    recommendations.push(`Ensure your website clearly states your location and services`)
-    recommendations.push(`Get listed in local business directories (Google Business, Yelp)`)
-    recommendations.push(`Ask satisfied customers to mention you in online forums`)
+    if (isUS) {
+      recommendations.push(`Ask your last 3 customers to leave a Google review mentioning your service and ${location}`)
+      recommendations.push(`Create a simple before/after post on your Facebook or Instagram page`)
+      recommendations.push(`Make sure your Google Business Profile is claimed and your services are listed`)
+      recommendations.push(`Join a local Facebook group for homeowners in ${location} and introduce your business`)
+      recommendations.push(`Add your business to Yelp and Angi (formerly Angie's List)`)
+    } else if (isSG) {
+      recommendations.push(`Ask recent customers to leave a Google review mentioning your service and location`)
+      recommendations.push(`Create a Facebook Business page if you don't have one — many SG customers search here`)
+      recommendations.push(`Make sure your Google Business Profile is claimed and fully filled out`)
+      recommendations.push(`Share your work in relevant Singapore Facebook Groups (e.g. neighbourhood groups, home renovation groups)`)
+      recommendations.push(`Get listed on Carousell Services or SingaporeMotherhood forums if relevant to your industry`)
+    }
   } else if (visibilityScore < 50) {
     // Tier 2: Below Average
-    recommendations.push(`Increase your Google review count - aim for 20+ reviews`)
-    recommendations.push(`Add FAQ section to your website answering common questions`)
-    recommendations.push(`Create case studies or portfolio showcasing your work`)
-    recommendations.push(`Engage in local community discussions online`)
+    if (isUS) {
+      recommendations.push(`Aim for 20+ Google reviews — email past customers with a direct review link`)
+      recommendations.push(`Add a simple FAQ page to your website answering the top 5 questions customers ask you`)
+      recommendations.push(`Create a portfolio or case studies page with photos of completed work`)
+      recommendations.push(`Ask satisfied customers to mention you in local Facebook Groups or Nextdoor`)
+    } else if (isSG) {
+      recommendations.push(`Aim for 20+ Google reviews — WhatsApp past customers with a direct review link`)
+      recommendations.push(`Add a simple FAQ section to your website or Facebook page`)
+      recommendations.push(`Post before/after photos regularly on your Facebook Business page or Instagram`)
+      recommendations.push(`Ask happy customers to recommend you in Singapore Facebook Groups or community chats`)
+    }
   } else if (visibilityScore < 70) {
     // Tier 3: Good
-    recommendations.push(`Maintain your current review momentum`)
-    recommendations.push(`Expand content to cover more service variations`)
-    recommendations.push(`Build backlinks from local websites and blogs`)
+    if (isUS) {
+      recommendations.push(`Keep requesting reviews consistently — volume matters for AI visibility`)
+      recommendations.push(`Expand your website content to cover more specific service variations and nearby cities`)
+      recommendations.push(`Build backlinks by getting listed on local chamber of commerce or industry association sites`)
+    } else if (isSG) {
+      recommendations.push(`Keep requesting Google reviews — consistency matters for AI visibility`)
+      recommendations.push(`Expand your website or Facebook page content to cover more specific services`)
+      recommendations.push(`Get listed on Singapore business directories like Kompass SG or the relevant trade association site`)
+    }
   } else {
     // Tier 4: Excellent
-    recommendations.push(`Great visibility! Keep up your current strategy. You're appearing in most AI search results.`)
+    recommendations.push(`Great visibility! Keep requesting reviews consistently to maintain your position`)
+    recommendations.push(`Consider expanding your service area or adding new services to capture more AI recommendations`)
     return recommendations
   }
 
@@ -149,7 +174,9 @@ export default function DashboardPage() {
           return
         }
 
-        setBusiness(businessData)
+        // Determine country from location
+        const country = businessData.location === 'Singapore' ? 'Singapore' : 'United States'
+        setBusiness({ ...businessData, country })
 
         // Get active prompts for this business
         const { data: prompts, error: promptsError } = await supabase
@@ -304,10 +331,10 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] bg-[#0a0a0a]">
         <div className="text-center">
           <svg
-            className="animate-spin h-8 w-8 text-red-900 mx-auto mb-4"
+            className="animate-spin h-8 w-8 text-red-400 mx-auto mb-4"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -326,7 +353,7 @@ export default function DashboardPage() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <p className="text-white/60">Loading dashboard...</p>
         </div>
       </div>
     )
@@ -334,47 +361,51 @@ export default function DashboardPage() {
 
   if (!business) {
     return (
-      <div className="max-w-4xl mx-auto p-8">
-        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-          <p className="text-gray-600">No business information found. Please complete setup.</p>
+      <div className="max-w-4xl mx-auto p-8 bg-[#0a0a0a] min-h-screen">
+        <div className="bg-[#1a1a1a] rounded-lg border border-white/10 p-8 text-center">
+          <p className="text-white/70">No business information found. Please complete setup.</p>
         </div>
       </div>
     )
   }
 
-  const recommendations = getRecommendations(visibilityScore, business.industry, business.location)
+  const country = business.country || (business.location === 'Singapore' ? 'Singapore' : 'United States')
+  const recommendations = getRecommendations(visibilityScore, business.industry, business.location, country)
 
   return (
-    <div className="max-w-6xl mx-auto p-6 md:p-8 space-y-6">
+    <div className="max-w-6xl mx-auto p-6 md:p-8 space-y-6 relative">
+      {/* Full-page Glow Layer */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: '5%', left: '30%', width: '500px', height: '300px', background: 'radial-gradient(ellipse, rgba(153,27,27,0.3) 0%, transparent 65%)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', top: '45%', left: '55%', width: '500px', height: '300px', background: 'radial-gradient(ellipse, rgba(153,27,27,0.25) 0%, transparent 65%)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', top: '80%', left: '25%', width: '500px', height: '300px', background: 'radial-gradient(ellipse, rgba(153,27,27,0.2) 0%, transparent 65%)', borderRadius: '50%' }} />
+      </div>
+
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-sm hover:shadow-md transition-shadow rounded-xl">
-          <CardContent className="pt-6">
-            <div className="text-sm text-gray-600 mb-1">Total Searches Tracked</div>
-            <div className="text-2xl font-bold">{results.length}</div>
-            <div className="text-xs text-gray-500 mt-1">Across ChatGPT & Perplexity</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-red-50 to-white border-2 border-red-200 shadow-md rounded-xl hover:shadow-lg transition-shadow">
-          <CardContent className="pt-6">
-            <div className="text-sm font-medium text-red-900 mb-1">Visibility Rate</div>
-            <div className="text-3xl font-bold text-red-900">{visibilityScore}%</div>
-            <div className="text-xs text-gray-500 mt-1">
+      <div className="border border-white/10 rounded-2xl p-6" style={{ position: 'relative', zIndex: 1, background: '#111111' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="border border-white/10 rounded-xl p-6" style={{ background: '#1a1a1a' }}>
+            <div className="text-white/50 text-xs mb-1">Total Searches Tracked</div>
+            <div className="text-white text-2xl font-bold">{results.length}</div>
+            <div className="text-white/50 text-xs mt-1">Across ChatGPT & Perplexity</div>
+          </div>
+          <div className="border border-red-900/50 rounded-xl p-6" style={{ background: '#1a1a1a' }}>
+            <div className="text-white/50 text-xs mb-1">Visibility Rate</div>
+            <div className="text-red-400 text-2xl font-bold">{visibilityScore}%</div>
+            <div className="text-white/50 text-xs mt-1">
               {visibilityScore < 20 ? '🔴 Needs improvement' : visibilityScore < 50 ? '🟡 Below average' : '🟢 Good visibility'}
             </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-sm hover:shadow-md transition-shadow rounded-xl">
-          <CardContent className="pt-6">
-            <div className="text-sm text-gray-600 mb-1">This Week</div>
-            <div className="text-2xl font-bold">{appearedCount} / {totalChecks}</div>
-            <div className="text-xs text-gray-500 mt-1">Successful checks</div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="border border-white/10 rounded-xl p-6" style={{ background: '#1a1a1a' }}>
+            <div className="text-white/50 text-xs mb-1">This Week</div>
+            <div className="text-white text-2xl font-bold">{appearedCount} / {totalChecks}</div>
+            <div className="text-white/50 text-xs mt-1">Successful checks</div>
+          </div>
+        </div>
       </div>
 
       {/* Run Tracking Now */}
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-6" style={{ position: 'relative', zIndex: 1 }}>
         <div className="text-center">
           <Button
             size="lg"
@@ -393,10 +424,10 @@ export default function DashboardPage() {
           </Button>
           {remainingRuns !== null && (
             <p
-              className={`mt-2 text-sm ${
+              className={`mt-2 text-sm relative z-10 ${
                 remainingRuns === 0
-                  ? 'text-amber-600'
-                  : 'text-gray-600'
+                  ? 'text-amber-400'
+                  : 'text-white/50'
               }`}
             >
               {remainingRuns > 0
@@ -408,124 +439,120 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Tracking Results */}
-      <Card className="bg-white shadow-lg rounded-xl border border-gray-100">
-        <CardHeader className="border-b border-gray-100">
-          <CardTitle className="text-2xl font-bold">Recent Searches</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
+      <div className="border border-white/10 rounded-2xl p-6" style={{ position: 'relative', zIndex: 1, background: '#111111' }}>
+        <h2 className="text-white font-semibold text-lg mb-6">Recent Searches</h2>
         {results.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg mb-2">No tracking data yet</p>
-            <p className="text-gray-500">
+            <p className="text-white/60 text-lg mb-2">No tracking data yet</p>
+            <p className="text-white/40">
               Your first tracking will run within 24 hours
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div>
             {results.map((result) => (
-              <Card
+              <div
                 key={result.id}
-                className="mb-4 last:mb-0 bg-gradient-to-br from-white to-gray-50 border border-gray-200 hover:border-red-200 hover:shadow-md transition-all duration-200 cursor-pointer rounded-lg"
+                className="mb-3 border border-white/10 rounded-xl p-4 cursor-pointer"
+                style={{ background: '#1a1a1a' }}
               >
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 pr-4">
-                      <p className="text-gray-900 text-base font-semibold mb-3">
-                        {truncateText(result.prompt_text || 'Unknown prompt', 100)}
-                      </p>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge
-                          variant="secondary"
-                          className={result.ai_platform === 'chatgpt' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}
-                        >
-                          {result.ai_platform === 'chatgpt' ? 'ChatGPT' : 'Perplexity'}
-                        </Badge>
-                        {result.status === 'failed' ? (
-                          <Badge variant="outline" className="border-amber-500 text-amber-600 bg-amber-50">
-                            ⚠ Check failed
-                          </Badge>
-                        ) : result.appeared === true ? (
-                          <Badge className="bg-green-600 text-white hover:bg-green-600">
-                            ✓ Appeared{result.position ? ` - ${result.position} position` : ''}
-                          </Badge>
-                        ) : result.appeared === false ? (
-                          <Badge variant="destructive">
-                            ✗ Not mentioned
-                          </Badge>
-                        ) : null}
-                        <span className="text-sm text-gray-500">{formatDate(result.tracked_at)}</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2 shrink-0">
-                      {result.full_response_text && (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">View Full Response</Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle>Full AI Response</DialogTitle>
-                              <DialogDescription>
-                                Platform: {result.ai_platform === 'chatgpt' ? 'ChatGPT' : 'Perplexity'} • Checked: {new Date(result.tracked_at).toLocaleString()}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <h4 className="font-semibold mb-1">Prompt:</h4>
-                                <p className="text-sm text-gray-600">{result.prompt_text}</p>
-                              </div>
-                              <div>
-                                <h4 className="font-semibold mb-1">Full Response:</h4>
-                                <p className="text-sm whitespace-pre-wrap">{result.full_response_text}</p>
-                              </div>
-                            </div>
-                            <DialogFooter>
-                              <Button variant="ghost" onClick={() => copyPrompt(result.prompt_text!)}>
-                                Copy Prompt
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 pr-4">
+                    <p className="text-white font-medium text-sm mb-3">
+                      {truncateText(result.prompt_text || 'Unknown prompt', 100)}
+                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {result.ai_platform === 'chatgpt' ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-blue-400/20 bg-blue-400/10 text-blue-400">
+                          ChatGPT
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-purple-400/20 bg-purple-400/10 text-purple-400">
+                          Perplexity
+                        </span>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyPrompt(result.prompt_text!)}
-                      >
-                        Copy Prompt
-                      </Button>
+                      {result.status === 'failed' ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-yellow-400/20 bg-yellow-400/10 text-yellow-400">
+                          ⚠ Check failed
+                        </span>
+                      ) : result.appeared === true ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-green-400/20 bg-green-400/10 text-green-400">
+                          ✓ Appeared
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-red-400/20 bg-red-400/10 text-red-400">
+                          ✗ Not mentioned
+                        </span>
+                      )}
+                      <span className="text-white/30 text-xs">{formatDate(result.tracked_at)}</span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex flex-col gap-2 shrink-0">
+                    {result.full_response_text && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" className="text-white/40 hover:text-white/70 text-xs h-auto p-1">
+                            View Full Response
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Full AI Response</DialogTitle>
+                            <DialogDescription>
+                              Platform: {result.ai_platform === 'chatgpt' ? 'ChatGPT' : 'Perplexity'} • Checked: {new Date(result.tracked_at).toLocaleString()}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-semibold mb-1">Prompt:</h4>
+                              <p className="text-sm text-gray-600">{result.prompt_text}</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-1">Full Response:</h4>
+                              <p className="text-sm whitespace-pre-wrap">{result.full_response_text}</p>
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button variant="ghost" onClick={() => copyPrompt(result.prompt_text!)}>
+                              Copy Prompt
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                    <Button
+                      variant="ghost"
+                      className="text-white/40 hover:text-white/70 text-xs h-auto p-1"
+                      onClick={() => copyPrompt(result.prompt_text!)}
+                    >
+                      Copy Prompt
+                    </Button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Bottom Section - Recommendations */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">How to Improve Your Visibility</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="border border-white/10 rounded-2xl p-6" style={{ position: 'relative', zIndex: 1, background: '#1a1a1a' }}>
+        <h2 className="text-white font-semibold text-lg mb-6">How to Improve Your Visibility</h2>
         {recommendations.length > 0 ? (
           <ol className="space-y-3">
             {recommendations.map((rec, index) => (
               <li key={index} className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 bg-red-900 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                <span className="flex-shrink-0 w-6 h-6 bg-red-900/40 text-red-400 border border-red-900/50 rounded-full flex items-center justify-center text-sm font-semibold">
                   {index + 1}
                 </span>
-                <p className="text-gray-700 pt-0.5">{rec}</p>
+                <p className="text-white/70 text-sm pt-0.5">{rec}</p>
               </li>
             ))}
           </ol>
         ) : (
-          <p className="text-gray-600">Keep up the great work!</p>
+          <p className="text-white/70 text-sm">Keep up the great work!</p>
         )}
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Toast Notification */}
       {toast && (

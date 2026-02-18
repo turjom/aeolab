@@ -55,23 +55,20 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">AEOLab</h1>
-          <p className="text-gray-600">Create your account to get started</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+      <div className="w-full max-w-md relative">
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(153,27,27,0.2) 0%, transparent 70%)' }} />
+        <div className="relative border border-white/10 rounded-2xl p-8" style={{ background: '#111111' }}>
+          <h1 className="text-white font-bold text-xl mb-6 text-center">AEOLab</h1>
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              <div className="bg-red-900/20 border border-red-900/50 text-red-400 px-4 py-3 rounded-md text-sm">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-white/60 text-sm mb-2">
                 Email
               </label>
               <input
@@ -80,14 +77,15 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                className="w-full px-4 py-2 border rounded-md outline-none transition-colors placeholder:text-white/30"
+                style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
                 placeholder="you@example.com"
                 disabled={loading}
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-white/60 text-sm mb-2">
                 Password
               </label>
               <input
@@ -97,17 +95,18 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                className="w-full px-4 py-2 border rounded-md outline-none transition-colors placeholder:text-white/30"
+                style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
                 placeholder="At least 6 characters"
                 disabled={loading}
               />
-              <p className="mt-1 text-xs text-gray-500">Minimum 6 characters</p>
+              <p className="mt-1 text-xs text-white/30">Minimum 6 characters</p>
             </div>
 
             <Button
               type="submit"
               variant="default"
-              className="w-full bg-red-900 hover:bg-red-800 text-white"
+              className="w-full py-2 rounded-full bg-[#991B1B] hover:bg-[#7f1d1d] text-white"
               disabled={loading}
             >
               {loading ? (
@@ -141,11 +140,11 @@ export default function SignupPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-white/40">
               Already have an account?{' '}
-              <Button variant="link" className="px-0 h-auto text-primary font-medium" asChild>
-                <Link href="/login">Sign in</Link>
-              </Button>
+              <Link href="/login" className="text-red-400 hover:text-red-300">
+                Sign in
+              </Link>
             </p>
           </div>
         </div>

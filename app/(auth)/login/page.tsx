@@ -47,23 +47,20 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your account</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+      <div className="w-full max-w-md relative">
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(153,27,27,0.2) 0%, transparent 70%)' }} />
+        <div className="relative border border-white/10 rounded-2xl p-8" style={{ background: '#111111' }}>
+          <h1 className="text-white font-bold text-xl mb-6 text-center">AEOLab</h1>
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              <div className="bg-red-900/20 border border-red-900/50 text-red-400 px-4 py-3 rounded-md text-sm">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-white/60 text-sm mb-2">
                 Email
               </label>
               <input
@@ -72,14 +69,15 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                className="w-full px-4 py-2 border rounded-md outline-none transition-colors placeholder:text-white/30"
+                style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
                 placeholder="you@example.com"
                 disabled={loading}
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-white/60 text-sm mb-2">
                 Password
               </label>
               <input
@@ -88,7 +86,8 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                className="w-full px-4 py-2 border rounded-md outline-none transition-colors placeholder:text-white/30"
+                style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
                 placeholder="Enter your password"
                 disabled={loading}
               />
@@ -97,7 +96,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               variant="default"
-              className="w-full bg-red-900 hover:bg-red-800 text-white"
+              className="w-full py-2 rounded-full bg-[#991B1B] hover:bg-[#7f1d1d] text-white"
               disabled={loading}
             >
               {loading ? (
@@ -131,11 +130,11 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-white/40">
               Don't have an account?{' '}
-              <Button variant="link" className="px-0 h-auto text-primary font-medium" asChild>
-                <Link href="/signup">Sign up</Link>
-              </Button>
+              <Link href="/signup" className="text-red-400 hover:text-red-300">
+                Sign up
+              </Link>
             </p>
           </div>
         </div>

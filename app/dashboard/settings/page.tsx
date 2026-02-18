@@ -372,10 +372,10 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] bg-[#0a0a0a]">
         <div className="text-center">
           <svg
-            className="animate-spin h-8 w-8 text-red-900 mx-auto mb-4"
+            className="animate-spin h-8 w-8 text-red-400 mx-auto mb-4"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -394,23 +394,23 @@ export default function SettingsPage() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-gray-600">Loading settings...</p>
+          <p className="text-white/60">Loading settings...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Account Settings</h1>
+    <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-8 bg-[#0a0a0a] min-h-screen">
+      <h1 className="text-white text-3xl font-bold mb-8">Account Settings</h1>
 
       {/* Toast Notification */}
       {toast && (
         <div
           className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 ${
             toast.type === 'success'
-              ? 'bg-green-50 border border-green-200 text-green-800'
-              : 'bg-red-50 border border-red-200 text-red-800'
+              ? 'bg-green-900/30 border border-green-400/20 text-green-400'
+              : 'bg-red-900/30 border border-red-400/20 text-red-400'
           }`}
         >
           <span className="text-xl">{toast.type === 'success' ? '✓' : '✕'}</span>
@@ -419,132 +419,132 @@ export default function SettingsPage() {
       )}
 
       {/* Business Information Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Business Information</CardTitle>
-          <CardDescription>Update your business details</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="business_name">
-                Business Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="business_name"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="industry">
-                Industry <span className="text-red-500">*</span>
-              </Label>
-              <Select value={industry} onValueChange={(value) => setIndustry(value)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select an industry" />
-                </SelectTrigger>
-                <SelectContent>
-                  {INDUSTRIES.map((ind) => (
-                    <SelectItem key={ind} value={ind}>
-                      {ind}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="country">
-                Country <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={country}
-                onValueChange={(value) => {
-                  setCountry(value)
-                  if (value === 'Singapore') {
-                    setLocation('Singapore')
-                  }
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {COUNTRIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="location">
-                Location <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="location"
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                required={country !== 'Singapore'}
-                disabled={country === 'Singapore'}
-                placeholder={
-                  country === 'Singapore'
-                    ? 'Singapore'
-                    : country === 'United States'
-                    ? 'City, State (e.g., Los Angeles, CA)'
-                    : 'Enter your location'
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="website_url">
-                Website URL <span className="text-gray-400 text-xs">(optional)</span>
-              </Label>
-              <Input
-                id="website_url"
-                type="url"
-                value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-                placeholder="https://example.com"
-              />
-            </div>
-
-            <Button
-              type="button"
-              onClick={handleSaveBusiness}
-              disabled={saving}
-              className="bg-red-900 hover:bg-red-800 text-white"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
+      <div className="border border-white/10 rounded-2xl p-6 mb-4" style={{ background: '#111111' }}>
+        <h2 className="text-white font-semibold text-base mb-4">Business Information</h2>
+        <p className="text-white/60 text-sm mb-6">Update your business details</p>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="business_name" className="text-white/60 text-sm">
+              Business Name <span className="text-red-400">*</span>
+            </Label>
+            <Input
+              id="business_name"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              required
+              className="w-full"
+              style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
+            />
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="space-y-2">
+            <Label htmlFor="industry" className="text-white/60 text-sm">
+              Industry <span className="text-red-400">*</span>
+            </Label>
+            <Select value={industry} onValueChange={(value) => setIndustry(value)}>
+              <SelectTrigger className="w-full" style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}>
+                <SelectValue placeholder="Select an industry" />
+              </SelectTrigger>
+              <SelectContent style={{ background: '#111111', borderColor: 'rgba(255,255,255,0.1)' }}>
+                {INDUSTRIES.map((ind) => (
+                  <SelectItem key={ind} value={ind} className="text-white">
+                    {ind}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="country" className="text-white/60 text-sm">
+              Country <span className="text-red-400">*</span>
+            </Label>
+            <Select
+              value={country}
+              onValueChange={(value) => {
+                setCountry(value)
+                if (value === 'Singapore') {
+                  setLocation('Singapore')
+                }
+              }}
+            >
+              <SelectTrigger className="w-full" style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}>
+                <SelectValue placeholder="Select a country" />
+              </SelectTrigger>
+              <SelectContent style={{ background: '#111111', borderColor: 'rgba(255,255,255,0.1)' }}>
+                {COUNTRIES.map((c) => (
+                  <SelectItem key={c} value={c} className="text-white">
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="location" className="text-white/60 text-sm">
+              Location <span className="text-red-400">*</span>
+            </Label>
+            <Input
+              id="location"
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              required={country !== 'Singapore'}
+              disabled={country === 'Singapore'}
+              className="w-full"
+              style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
+              placeholder={
+                country === 'Singapore'
+                  ? 'Singapore'
+                  : country === 'United States'
+                  ? 'City, State (e.g., Los Angeles, CA)'
+                  : 'Enter your location'
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="website_url" className="text-white/60 text-sm">
+              Website URL <span className="text-white/30 text-xs">(optional)</span>
+            </Label>
+            <Input
+              id="website_url"
+              type="url"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+              className="w-full"
+              style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
+              placeholder="https://example.com"
+            />
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleSaveBusiness}
+            disabled={saving}
+            className="rounded-full bg-[#991B1B] hover:bg-[#7f1d1d] text-white"
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </div>
 
       {/* Account Settings Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Account Settings</CardTitle>
-          <CardDescription>Manage your account credentials</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="current_email">Current Email</Label>
-              <Input
-                id="current_email"
-                type="email"
-                value={userEmail}
-                disabled
-                className="bg-muted"
-              />
+      <div className="border border-white/10 rounded-2xl p-6 mb-4" style={{ background: '#111111' }}>
+        <h2 className="text-white font-semibold text-base mb-4">Account Settings</h2>
+        <p className="text-white/60 text-sm mb-6">Manage your account credentials</p>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="current_email" className="text-white/60 text-sm">Current Email</Label>
+            <Input
+              id="current_email"
+              type="email"
+              value={userEmail}
+              disabled
+              className="w-full"
+              style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
+            />
             </div>
 
             <div className="flex gap-4">
@@ -559,42 +559,46 @@ export default function SettingsPage() {
                 }}
               >
                 <DialogTrigger asChild>
-                  <Button variant="outline">Change Email</Button>
+                  <Button variant="outline" className="border border-white/20 text-white/70 hover:text-white hover:border-white/40 rounded-lg px-4 py-2 text-sm bg-transparent">Change Email</Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md" style={{ background: '#111111', borderColor: 'rgba(255,255,255,0.1)' }}>
                   <DialogHeader>
-                    <DialogTitle>Change Email</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle className="text-white">Change Email</DialogTitle>
+                    <DialogDescription className="text-white/60">
                       Enter your new email and current password to update.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label htmlFor="new_email">New Email</Label>
+                      <Label htmlFor="new_email" className="text-white/60 text-sm">New Email</Label>
                       <Input
                         id="new_email"
                         type="email"
                         value={newEmail}
                         onChange={(e) => setNewEmail(e.target.value)}
                         placeholder="new@example.com"
+                        className="w-full"
+                        style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email_password">Current Password</Label>
+                      <Label htmlFor="email_password" className="text-white/60 text-sm">Current Password</Label>
                       <Input
                         id="email_password"
                         type="password"
                         value={emailPassword}
                         onChange={(e) => setEmailPassword(e.target.value)}
                         placeholder="Enter your password"
+                        className="w-full"
+                        style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
                       />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowEmailModal(false)}>
+                    <Button variant="outline" onClick={() => setShowEmailModal(false)} className="border-white/10 text-white/60 hover:bg-white/5">
                       Cancel
                     </Button>
-                    <Button onClick={handleChangeEmail} disabled={saving}>
+                    <Button onClick={handleChangeEmail} disabled={saving} className="rounded-full bg-[#991B1B] hover:bg-[#7f1d1d] text-white">
                       {saving ? 'Updating...' : 'Update Email'}
                     </Button>
                   </DialogFooter>
@@ -613,52 +617,58 @@ export default function SettingsPage() {
                 }}
               >
                 <DialogTrigger asChild>
-                  <Button variant="outline">Change Password</Button>
+                  <Button variant="outline" className="border border-white/20 text-white/70 hover:text-white hover:border-white/40 rounded-lg px-4 py-2 text-sm bg-transparent">Change Password</Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md" style={{ background: '#111111', borderColor: 'rgba(255,255,255,0.1)' }}>
                   <DialogHeader>
-                    <DialogTitle>Change Password</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle className="text-white">Change Password</DialogTitle>
+                    <DialogDescription className="text-white/60">
                       Enter your current password and choose a new one.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label htmlFor="current_password">Current Password</Label>
+                      <Label htmlFor="current_password" className="text-white/60 text-sm">Current Password</Label>
                       <Input
                         id="current_password"
                         type="password"
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
                         placeholder="Enter current password"
+                        className="w-full"
+                        style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="new_password">New Password</Label>
+                      <Label htmlFor="new_password" className="text-white/60 text-sm">New Password</Label>
                       <Input
                         id="new_password"
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="At least 6 characters"
+                        className="w-full"
+                        style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="confirm_password">Confirm New Password</Label>
+                      <Label htmlFor="confirm_password" className="text-white/60 text-sm">Confirm New Password</Label>
                       <Input
                         id="confirm_password"
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirm new password"
+                        className="w-full"
+                        style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
                       />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowPasswordModal(false)}>
+                    <Button variant="outline" onClick={() => setShowPasswordModal(false)} className="border-white/10 text-white/60 hover:bg-white/5">
                       Cancel
                     </Button>
-                    <Button onClick={handleChangePassword} disabled={saving}>
+                    <Button onClick={handleChangePassword} disabled={saving} className="rounded-full bg-[#991B1B] hover:bg-[#7f1d1d] text-white">
                       {saving ? 'Updating...' : 'Update Password'}
                     </Button>
                   </DialogFooter>
@@ -666,72 +676,70 @@ export default function SettingsPage() {
               </Dialog>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Danger Zone Section */}
-      <Card className="border-red-200">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-red-600">Danger Zone</CardTitle>
-          <CardDescription>Irreversible actions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600 mb-6">
-            Once you delete your account, there is no going back. This will permanently delete all your data.
-          </p>
-          <Dialog
-            open={showDeleteModal}
-            onOpenChange={(open) => {
-              setShowDeleteModal(open)
-              if (!open) setDeleteConfirm('')
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button variant="destructive">Delete Account</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-red-600">Delete Account</DialogTitle>
-                <DialogDescription>
-                  This action cannot be undone. This will permanently delete your account and all associated data.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="delete_confirm">
-                    Type <span className="font-bold">DELETE</span> to confirm:
-                  </Label>
-                  <Input
-                    id="delete_confirm"
-                    type="text"
-                    value={deleteConfirm}
-                    onChange={(e) => setDeleteConfirm(e.target.value)}
-                    placeholder="DELETE"
-                  />
-                </div>
+      <div className="border border-red-900/30 rounded-2xl p-6 mb-4" style={{ background: '#111111' }}>
+        <h2 className="text-white font-semibold text-base mb-4">Danger Zone</h2>
+        <p className="text-white/60 text-sm mb-6">Irreversible actions</p>
+        <p className="text-white/60 mb-6">
+          Once you delete your account, there is no going back. This will permanently delete all your data.
+        </p>
+        <Dialog
+          open={showDeleteModal}
+          onOpenChange={(open) => {
+            setShowDeleteModal(open)
+            if (!open) setDeleteConfirm('')
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button variant="destructive" className="bg-red-900 hover:bg-red-800">Delete Account</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md" style={{ background: '#111111', borderColor: 'rgba(255,255,255,0.1)' }}>
+            <DialogHeader>
+              <DialogTitle className="text-red-400">Delete Account</DialogTitle>
+              <DialogDescription className="text-white/60">
+                This action cannot be undone. This will permanently delete your account and all associated data.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="delete_confirm" className="text-white/60 text-sm">
+                  Type <span className="font-bold">DELETE</span> to confirm:
+                </Label>
+                <Input
+                  id="delete_confirm"
+                  type="text"
+                  value={deleteConfirm}
+                  onChange={(e) => setDeleteConfirm(e.target.value)}
+                  placeholder="DELETE"
+                  className="w-full"
+                  style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
+                />
               </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowDeleteModal(false)
-                    setDeleteConfirm('')
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteAccount}
-                  disabled={saving || deleteConfirm !== 'DELETE'}
-                >
-                  {saving ? 'Deleting...' : 'Delete Account'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </CardContent>
-      </Card>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setDeleteConfirm('')
+                }}
+                className="border-white/10 text-white/60 hover:bg-white/5"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAccount}
+                disabled={saving || deleteConfirm !== 'DELETE'}
+                className="bg-red-900 hover:bg-red-800"
+              >
+                {saving ? 'Deleting...' : 'Delete Account'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
 
     </div>
   )
